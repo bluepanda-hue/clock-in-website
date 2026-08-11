@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClockFlex — Attendance infrastructure for multi-site hospitality</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F7F8FA;
+    --panel: #FFFFFF;
+    --ink: #10182B;
+    --ink-soft: #4B5566;
+    --line: #E4E7EC;
+    --teal: #0E7C7B;
+    --teal-deep: #0B615F;
+    --teal-tint: #E7F3F2;
+    --amber-flag: #C9822B;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html{ scroll-behavior: smooth; }
+  body{ background: var(--paper); color: var(--ink); font-family:'Inter', sans-serif; line-height:1.55; }
+  @media (prefers-reduced-motion: reduce){ *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+  a{ color:inherit; text-decoration:none; }
+  .wrap{ max-width: 1180px; margin:0 auto; padding: 0 32px; }
+  ::selection{ background: var(--teal); color:#fff; }
+  :focus-visible{ outline: 2px solid var(--teal); outline-offset: 3px; }
+
+  .display{ font-family:'Manrope', sans-serif; letter-spacing: -0.02em; }
+  .mono{ font-family:'JetBrains Mono', monospace; }
+
+  header{ position:sticky; top:0; z-index:50; background: rgba(247,248,250,0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  nav{ display:flex; align-items:center; justify-content:space-between; padding:18px 32px; max-width:1180px; margin:0 auto; }
+  .logo{ display:flex; align-items:center; gap:9px; font-family:'Manrope'; font-weight:800; font-size:19px; letter-spacing:-0.02em; }
+  .logo .mark{ width:16px; height:16px; border-radius:4px; background: var(--teal); position:relative; flex:none; }
+  .logo .mark::after{ content:""; position:absolute; top:3px; left:7px; width:1.5px; height:5px; background:#fff; }
+  .logo .mark::before{ content:""; position:absolute; top:3px; left:7px; width:5px; height:1.5px; background:#fff; }
+  .navlinks{ display:flex; gap:30px; font-size:14px; color: var(--ink-soft); }
+  .navlinks a:hover{ color: var(--ink); }
+  .nav-cta{ font-family:'Inter'; font-weight:600; font-size:13.5px; padding:10px 20px; background: var(--ink); color:#fff; border-radius:6px; transition: background 0.15s; }
+  .nav-cta:hover{ background: var(--teal-deep); }
+  @media (max-width:820px){ .navlinks{ display:none; } }
+
+  .hero{ padding: 84px 0 60px; }
+  .hero-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:56px; align-items:center; }
+  @media (max-width:920px){ .hero-grid{ grid-template-columns:1fr; } }
+
+  .eyebrow{ display:inline-flex; align-items:center; gap:8px; font-family:'JetBrains Mono'; font-size:12px; color: var(--teal-deep); background: var(--teal-tint); padding:7px 12px; border-radius: 20px; margin-bottom: 24px; }
+  .eyebrow .dot{ width:6px; height:6px; border-radius:50%; background: var(--teal); }
+
+  h1{ font-family:'Manrope'; font-weight:800; letter-spacing:-0.03em; font-size: clamp(38px, 4.6vw, 58px); line-height:1.04; margin-bottom:22px; }
+  h1 .accent{ color: var(--teal); }
+  .hero p.sub{ font-size:17.5px; color: var(--ink-soft); max-width:460px; margin-bottom:32px; }
+  .hero p.sub strong{ color: var(--ink); font-weight:600; }
+
+  .cta-row{ display:flex; gap:14px; flex-wrap:wrap; margin-bottom:36px; }
+  .btn{ font-family:'Inter'; font-weight:600; font-size:14.5px; padding:14px 24px; border-radius:7px; display:inline-flex; align-items:center; gap:8px; transition: transform 0.15s, background 0.15s, border-color 0.15s; }
+  .btn-primary{ background: var(--ink); color:#fff; }
+  .btn-primary:hover{ background: var(--teal-deep); transform: translateY(-1px); }
+  .btn-ghost{ border:1px solid var(--line); color: var(--ink); background:#fff; }
+  .btn-ghost:hover{ border-color: var(--teal); }
+
+  .stat-row{ display:flex; gap:34px; flex-wrap:wrap; }
+  .stat-row .stat b{ display:block; font-family:'Manrope'; font-weight:800; font-size:22px; letter-spacing:-0.02em; }
+  .stat-row .stat span{ font-family:'JetBrains Mono'; font-size:11.5px; color: var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; }
+
+  /* Ledger panel — signature element */
+  .ledger{ background: var(--panel); border:1px solid var(--line); border-radius:12px; padding:26px 26px 22px; box-shadow: 0 24px 60px -30px rgba(16,24,43,0.18); }
+  .ledger-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
+  .ledger-head .lt{ font-family:'JetBrains Mono'; font-size:11.5px; color: var(--ink-soft); text-transform:uppercase; letter-spacing:0.08em; }
+  .live-tag{ display:flex; align-items:center; gap:6px; font-family:'JetBrains Mono'; font-size:11px; color: var(--teal-deep); }
+  .live-tag .pulse{ width:6px; height:6px; border-radius:50%; background: var(--teal); animation: pulse 1.8s infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; } 50%{ opacity:0.35; } }
+
+  .ledger-row{ display:flex; justify-content:space-between; align-items:center; padding: 12px 0; border-bottom: 1px solid var(--line); font-size:14px; }
+  .ledger-row:last-of-type{ border-bottom:none; }
+  .ledger-row .site{ display:flex; flex-direction:column; }
+  .ledger-row .site b{ font-weight:600; }
+  .ledger-row .site span{ font-family:'JetBrains Mono'; font-size:11px; color: var(--ink-soft); }
+  .ledger-row .figures{ text-align:right; }
+  .ledger-row .figures .n{ font-family:'JetBrains Mono'; font-weight:600; font-size:15px; }
+  .ledger-row .figures .l{ font-family:'JetBrains Mono'; font-size:10.5px; color: var(--ink-soft); text-transform:uppercase; }
+  .badge{ font-family:'JetBrains Mono'; font-size:10.5px; padding:3px 8px; border-radius:10px; }
+  .badge.ok{ background: var(--teal-tint); color: var(--teal-deep); }
+  .badge.flag{ background: #FBF0DE; color: var(--amber-flag); }
+
+  .ledger-foot{ margin-top:18px; padding-top:16px; border-top:1px solid var(--line); display:flex; justify-content:space-between; font-family:'JetBrains Mono'; font-size:12px; color: var(--ink-soft); }
+  .ledger-foot b{ color: var(--ink); }
+
+  /* Sections */
+  .section{ padding:88px 0; }
+  .section-head{ max-width:600px; margin-bottom:48px; }
+  .kicker{ font-family:'JetBrains Mono'; font-size:12px; color: var(--teal-deep); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:14px; }
+  h2{ font-family:'Manrope'; font-weight:800; letter-spacing:-0.025em; font-size: clamp(26px,3vw,38px); line-height:1.08; margin-bottom:14px; }
+  .section-head p{ color: var(--ink-soft); font-size:16px; }
+
+  .card-grid{ display:grid; grid-template-columns: repeat(3,1fr); gap:20px; }
+  @media (max-width:860px){ .card-grid{ grid-template-columns:1fr; } }
+  .card{ background: var(--panel); border:1px solid var(--line); border-radius:10px; padding:28px 24px; }
+  .card .c-tag{ font-family:'JetBrains Mono'; font-size:11px; color: var(--amber-flag); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:14px; }
+  .card h3{ font-family:'Manrope'; font-weight:700; font-size:17px; margin-bottom:10px; letter-spacing:-0.01em; }
+  .card p{ color: var(--ink-soft); font-size:14.5px; }
+
+  .methods{ display:grid; grid-template-columns: repeat(3,1fr); gap:20px; }
+  @media (max-width:860px){ .methods{ grid-template-columns:1fr; } }
+  .method{ background: var(--panel); border:1px solid var(--line); border-radius:10px; padding:26px 22px; transition: border-color 0.2s, transform 0.2s; }
+  .method:hover{ border-color: var(--teal); transform: translateY(-2px); }
+  .method h3{ font-family:'Manrope'; font-weight:700; font-size:18px; margin-bottom:8px; letter-spacing:-0.01em; }
+  .method p{ color: var(--ink-soft); font-size:14px; margin-bottom:14px; }
+  .method .fit{ font-family:'JetBrains Mono'; font-size:11px; color: var(--teal-deep); border-top:1px solid var(--line); padding-top:12px; }
+
+  .feat-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap:1px; background: var(--line); border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  @media (max-width:900px){ .feat-grid{ grid-template-columns: repeat(2,1fr); } }
+  @media (max-width:540px){ .feat-grid{ grid-template-columns:1fr; } }
+  .feat{ background: var(--panel); padding:26px 20px; }
+  .feat .f-num{ font-family:'JetBrains Mono'; font-size:11px; color: var(--ink-soft); margin-bottom:14px; }
+  .feat h3{ font-family:'Inter'; font-weight:600; font-size:15.5px; margin-bottom:8px; }
+  .feat p{ color: var(--ink-soft); font-size:13.5px; }
+
+  /* Comparison table */
+  .compare{ width:100%; border-collapse: collapse; background: var(--panel); border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:14px; }
+  .compare th, .compare td{ padding:14px 18px; text-align:left; border-bottom:1px solid var(--line); }
+  .compare th{ font-family:'JetBrains Mono'; font-size:11px; text-transform:uppercase; letter-spacing:0.06em; color: var(--ink-soft); background: #FBFBFC; }
+  .compare td.you{ font-weight:600; color: var(--teal-deep); }
+  .compare tr:last-child td{ border-bottom:none; }
+  .compare-wrap{ overflow-x:auto; }
+
+  .sa-strip{ background: var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:64px 0; }
+  .sa-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:50px; align-items:center; }
+  @media (max-width:860px){ .sa-grid{ grid-template-columns:1fr; } }
+  .sa-grid p{ color: var(--ink-soft); font-size:15.5px; margin-bottom:12px; }
+  .wage-table{ font-family:'JetBrains Mono'; font-size:13.5px; border:1px solid var(--line); border-radius:8px; overflow:hidden; background: var(--paper); }
+  .wage-row{ display:flex; justify-content:space-between; padding:12px 18px; border-bottom:1px solid var(--line); }
+  .wage-row:last-child{ border-bottom:none; }
+  .wage-row.head{ background: var(--teal-tint); color: var(--teal-deep); }
+
+  .cta-band{ padding:96px 0; text-align:center; }
+  .cta-band h2{ font-size: clamp(30px,4.6vw,46px); margin-bottom:16px; }
+  .cta-band p{ color: var(--ink-soft); font-size:16.5px; max-width:460px; margin:0 auto 34px; }
+
+  footer{ border-top:1px solid var(--line); padding:36px 0; }
+  .foot-row{ display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; }
+  .foot-links{ display:flex; gap:22px; font-family:'JetBrains Mono'; font-size:12px; color: var(--ink-soft); }
+  .foot-links a:hover{ color: var(--ink); }
+
+  .reveal{ opacity:0; transform: translateY(16px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.in{ opacity:1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <nav>
+    <div class="logo"><span class="mark"></span>ClockFlex</div>
+    <div class="navlinks">
+      <a href="#why">Why now</a>
+      <a href="#methods">How it works</a>
+      <a href="#sa">Reliability</a>
+    </div>
+    <a href="#demo" class="nav-cta">Request a walkthrough</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow"><span class="dot"></span>Attendance & wage infrastructure</div>
+      <h1>Accurate hours, across <span class="accent">every location</span>, without the excuses.</h1>
+      <p class="sub">ClockFlex verifies attendance with <strong>WiFi, GPS, or QR</strong> — configured per site — so operators running multiple locations get clean data even where connectivity and power aren't guaranteed.</p>
+      <div class="cta-row">
+        <a href="#demo" class="btn btn-primary">Request a walkthrough →</a>
+        <a href="#compare" class="btn btn-ghost">Compare vs. incumbents</a>
+      </div>
+      <div class="stat-row">
+        <div class="stat"><b>3</b><span>Verification modes</span></div>
+        <div class="stat"><b>1</b><span>Dashboard, unlimited sites</span></div>
+        <div class="stat"><b>100%</b><span>Uptime through outages</span></div>
+      </div>
+    </div>
+
+    <div class="ledger">
+      <div class="ledger-head">
+        <div class="lt">Location ledger — today</div>
+        <div class="live-tag"><span class="pulse"></span>Live</div>
+      </div>
+
+      <div class="ledger-row">
+        <div class="site"><b>Downtown</b><span>WiFi verified</span></div>
+        <div class="figures"><span class="badge ok">On track</span></div>
+      </div>
+      <div class="ledger-row">
+        <div class="site"><b>Riverside</b><span>GPS verified</span></div>
+        <div class="figures"><span class="badge ok">On track</span></div>
+      </div>
+      <div class="ledger-row">
+        <div class="site"><b>Uptown</b><span>QR verified · backup mode</span></div>
+        <div class="figures"><span class="badge flag">Backup mode</span></div>
+      </div>
+      <div class="ledger-row">
+        <div class="site"><b>Harbor District</b><span>WiFi verified</span></div>
+        <div class="figures"><span class="badge ok">On track</span></div>
+      </div>
+
+      <div class="ledger-foot">
+        <span>Staff clocked in: <b id="clockedin">41</b></span>
+        <span>Hours logged today: <b id="hourslogged">96.5</b></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="why">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2>The risk hiding in old clock-in systems</h2>
+      <p>Most systems assume stable power and constant signal — conditions that can't be guaranteed at every location.</p>
+    </div>
+    <div class="card-grid reveal">
+      <div class="card">
+        <div class="c-tag">Risk 01</div>
+        <h3>Single point of failure</h3>
+        <p>GPS-only or app-only clock-in tools go dark during power outages or in low-signal locations — exactly when accurate records matter most.</p>
+      </div>
+      <div class="card">
+        <div class="c-tag">Risk 02</div>
+        <h3>Wage compliance exposure</h3>
+        <p>Manual rate calculations for weekends and holidays are a recurring source of underpayment disputes and compliance risk.</p>
+      </div>
+      <div class="card">
+        <div class="c-tag">Risk 03</div>
+        <h3>No per-site flexibility</h3>
+        <p>A multi-branch chain doesn't have identical sites. Fixed verification methods force a worst-case setup everywhere.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="methods">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="kicker">Configured per site</div>
+      <h2>Three verification modes, one dashboard</h2>
+      <p>Each location runs the method that fits its conditions — switched centrally, not hardcoded into the app.</p>
+    </div>
+    <div class="methods reveal">
+      <div class="method">
+        <h3>WiFi / IP match</h3>
+        <p>Confirms the device is on the store's network. No extra hardware, works indoors, and caches for brief outages.</p>
+        <div class="fit">Fit: fixed sites with in-store WiFi</div>
+      </div>
+      <div class="method">
+        <h3>GPS radius</h3>
+        <p>Confirms the device is within a defined distance of the site. Suited to outdoor seating and semi-permanent locations.</p>
+        <div class="fit">Fit: open-air venues, markets, pop-ups</div>
+      </div>
+      <div class="method">
+        <h3>QR code</h3>
+        <p>A posted code staff scan on arrival. Zero network dependency — the fallback that keeps working through outages.</p>
+        <div class="fit">Fit: backup mode, low-connectivity sites</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <div class="kicker">Platform capabilities</div>
+      <h2>What's running under the dashboard</h2>
+    </div>
+    <div class="feat-grid reveal">
+      <div class="feat"><div class="f-num">01</div><h3>Anti-cheat heuristics</h3><p>Flags impossible clock patterns and location spoofing automatically.</p></div>
+      <div class="feat"><div class="f-num">02</div><h3>Configurable wage engine</h3><p>Weekend, holiday, and overtime multipliers built in.</p></div>
+      <div class="feat"><div class="f-num">03</div><h3>Role-based access</h3><p>Owners, managers, and staff see only what's relevant to them.</p></div>
+      <div class="feat"><div class="f-num">04</div><h3>PWA install</h3><p>Home-screen install experience — no App Store dependency.</p></div>
+      <div class="feat"><div class="f-num">05</div><h3>Excel export</h3><p>Payroll-ready exports, formatted for your bookkeeper.</p></div>
+      <div class="feat"><div class="f-num">06</div><h3>Per-site configuration</h3><p>Independent rules and verification per location, one dashboard.</p></div>
+      <div class="feat"><div class="f-num">07</div><h3>Persistent storage</h3><p>Records survive restarts and power outages without data loss.</p></div>
+      <div class="feat"><div class="f-num">08</div><h3>Real-time visibility</h3><p>Live status across every branch, updated as shifts happen.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sa-strip" id="sa">
+  <div class="wrap sa-grid">
+    <div class="reveal">
+      <div class="kicker">Configurable by design</div>
+      <h2>Payroll math correct from day one</h2>
+      <p>Wage rules adapt to your local pay structure — weekends, public holidays, and overtime — so compliance isn't bolted on after the fact.</p>
+      <p>Every location keeps working through outages and dead zones, because verification never depends on a single method.</p>
+    </div>
+    <div class="wage-table reveal">
+      <div class="wage-row head"><span>Day type</span><span>Multiplier</span></div>
+      <div class="wage-row"><span>Weekday</span><span>1.0×</span></div>
+      <div class="wage-row"><span>Weekend</span><span>1.0×</span></div>
+      <div class="wage-row"><span>Sunday</span><span>1.5×</span></div>
+      <div class="wage-row"><span>Public holiday</span><span>2.0×</span></div>
+      <div class="wage-row"><span>Overtime</span><span>1.5×</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="cta-band" id="demo">
+  <div class="wrap">
+    <h2 class="reveal">Let's walk through your locations</h2>
+    <p class="reveal">Bring your site list — we'll map verification methods to each one on the call.</p>
+    <div class="cta-row reveal" style="justify-content:center;">
+      <a href="#" class="btn btn-primary">Request a walkthrough →</a>
+      <a href="#" class="btn btn-ghost">Ask a question</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <div class="logo"><span class="mark"></span>ClockFlex</div>
+    <div class="foot-links">
+      <a href="#why">Why now</a>
+      <a href="#methods">How it works</a>
+      <a href="#demo">Contact</a>
+    </div>
+    <div class="mono" style="font-size:12px; color:var(--ink-soft);">A PCSHM Group product</div>
+  </div>
+</footer>
+
+<script>
+  // Gentle live-metric drift
+  const clockedEl = document.getElementById('clockedin');
+  const hoursEl = document.getElementById('hourslogged');
+  let clocked = 41, hours = 96.5;
+  setInterval(() => {
+    if(Math.random() > 0.5){ clocked += 1; }
+    hours += 0.5;
+    clockedEl.textContent = clocked;
+    hoursEl.textContent = hours.toFixed(1);
+  }, 4000);
+
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('in'); });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+</script>
+
+</body>
+</html>
